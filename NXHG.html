@@ -1,0 +1,449 @@
+<html><head><base href="NXHG">
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #000;
+    font-family: Arial, sans-serif;
+    perspective: 1000px;
+    overflow: hidden;
+  }
+  .matrix-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .game-gear-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
+  .game-gear {
+    width: 400px;
+    height: 200px;
+    background-color: #222;
+    border-radius: 20px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(5deg);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  }
+  .screen {
+    width: 200px;
+    height: 120px;
+    background-color: #000;
+    position: absolute;
+    top: 40px;
+    left: 100px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #111;
+  }
+  .screen-content {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff);
+    animation: colorCycle 10s infinite;
+    display: none; /* Initially hidden */
+  }
+  .d-pad {
+    width: 60px;
+    height: 60px;
+    background-color: #111;
+    position: absolute;
+    left: 20px;
+    top: 70px;
+    border-radius: 50%;
+  }
+  .d-pad::before, .d-pad::after {
+    content: '';
+    position: absolute;
+    background-color: #000;
+  }
+  .d-pad::before {
+    width: 60%;
+    height: 20%;
+    top: 40%;
+    left: 20%;
+  }
+  .d-pad::after {
+    width: 20%;
+    height: 60%;
+    top: 20%;
+    left: 40%;
+  }
+  .buttons {
+    position: absolute;
+    right: 20px;
+    top: 70px;
+  }
+  .button {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin: 5px;
+    display: block;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    line-height: 35px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+  }
+  .start-button, .option-button {
+    width: 25px;
+    height: 8px;
+    background-color: #333;
+    position: absolute;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .start-button {
+    left: 20px;
+    top: 35px;
+  }
+  .option-button {
+    left: 55px;
+    top: 35px;
+  }
+  .logo {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255,255,255,0.5);
+  }
+  .cartridge-slot {
+    width: 120px;
+    height: 10px;
+    background-color: #111;
+    position: absolute;
+    top: -5px;
+    left: 140px;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+  }
+  .cartridge {
+    width: 100px;
+    height: 60px;
+    background-color: #444;
+    position: absolute;
+    top: -65px;
+    left: 150px;
+    border-radius: 5px 5px 0 0;
+    transform-origin: bottom;
+    transform: rotateX(90deg);
+    transition: transform 0.5s ease-in-out;
+  }
+  .cartridge.inserted {
+    transform: rotateX(0deg);
+  }
+  .speaker {
+    width: 30px;
+    height: 6px;
+    background-color: #111;
+    position: absolute;
+    bottom: 20px;
+    border-radius: 3px;
+  }
+  .speaker-left {
+    left: 80px;
+  }
+  .speaker-right {
+    right: 80px;
+  }
+  .speaker::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(90deg, #111, #111 2px, #222 2px, #222 4px);
+    opacity: 0.5;
+  }
+  .headphone-jack {
+    width: 6px;
+    height: 6px;
+    background-color: #000;
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    border-radius: 50%;
+  }
+  .volume-control {
+    width: 25px;
+    height: 25px;
+    background-color: #333;
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .volume-indicator {
+    width: 8px;
+    height: 2px;
+    background-color: #fff;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+    transform-origin: center right;
+  }
+  .battery-compartment {
+    width: 120px;
+    height: 25px;
+    background-color: #111;
+    position: absolute;
+    bottom: -12px;
+    left: 140px;
+    border-radius: 0 0 10px 10px;
+  }
+  .ac-adapter-port {
+    width: 12px;
+    height: 6px;
+    background-color: #000;
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+    border-radius: 2px;
+  }
+  .power-switch {
+    width: 18px;
+    height: 8px;
+    background-color: #333;
+    position: absolute;
+    bottom: 10px;
+    left: 80px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .power-led {
+    width: 5px;
+    height: 5px;
+    background-color: #f00;
+    position: absolute;
+    bottom: 11px;
+    left: 105px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+  }
+  .power-led.on {
+    background-color: #0f0;
+    box-shadow: 0 0 5px #0f0;
+  }
+  .link-cable-port {
+    width: 10px;
+    height: 5px;
+    background-color: #000;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    border-radius: 2px;
+  }
+  .link-cable {
+    width: 80px;
+    height: 3px;
+    background-color: #333;
+    position: absolute;
+    top: 12px;
+    right: -60px;
+    transform-origin: left;
+    transform: rotate(45deg);
+    display: none;
+  }
+  @keyframes colorCycle {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .button:active, .start-button:active, .option-button:active {
+    transform: scale(0.95);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+  }
+</style>
+</head>
+<body>
+  <canvas class="matrix-bg"></canvas>
+  <div class="game-gear-container">
+    <div class="game-gear">
+      <div class="logo">NXHG</div>
+      <div class="start-button"></div>
+      <div class="option-button"></div>
+      <div class="screen">
+        <div class="screen-content"></div>
+      </div>
+      <div class="d-pad"></div>
+      <div class="buttons">
+        <div class="button">A</div>
+        <div class="button">B</div>
+      </div>
+      <div class="cartridge-slot"></div>
+      <div class="cartridge"></div>
+      <div class="speaker speaker-left"></div>
+      <div class="speaker speaker-right"></div>
+      <div class="headphone-jack"></div>
+      <div class="volume-control">
+        <div class="volume-indicator"></div>
+      </div>
+      <div class="battery-compartment"></div>
+      <div class="ac-adapter-port"></div>
+      <div class="power-switch"></div>
+      <div class="power-led"></div>
+      <div class="link-cable-port"></div>
+      <div class="link-cable"></div>
+    </div>
+  </div>
+
+  <script>
+    const gameGear = document.querySelector('.game-gear');
+    const screenContent = document.querySelector('.screen-content');
+    const cartridge = document.querySelector('.cartridge');
+    const cartridgeSlot = document.querySelector('.cartridge-slot');
+    const volumeControl = document.querySelector('.volume-control');
+    const volumeIndicator = document.querySelector('.volume-indicator');
+    const powerSwitch = document.querySelector('.power-switch');
+    const powerLed = document.querySelector('.power-led');
+    const buttons = document.querySelectorAll('.button, .start-button, .option-button');
+    const linkCablePort = document.querySelector('.link-cable-port');
+    const linkCable = document.querySelector('.link-cable');
+
+    let isInserted = false;
+    let isDragging = false;
+    let currentRotation = 0;
+    let isPoweredOn = false;
+    let isLinkCableConnected = false;
+
+    document.addEventListener('mousemove', (e) => {
+      const rect = gameGear.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const rotateY = (e.clientX - centerX) / 30;
+      const rotateX = (centerY - e.clientY) / 30 + 5;
+      gameGear.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+    });
+
+    setInterval(() => {
+      if (isPoweredOn) {
+        const hue = Math.random() * 360;
+        screenContent.style.background = `linear-gradient(${hue}deg, hsl(${hue}, 100%, 50%), hsl(${(hue + 120) % 360}, 100%, 50%), hsl(${(hue + 240) % 360}, 100%, 50%))`;
+      }
+    }, 3000);
+
+    cartridgeSlot.addEventListener('click', () => {
+      isInserted = !isInserted;
+      cartridge.classList.toggle('inserted', isInserted);
+    });
+
+    volumeControl.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      document.addEventListener('mousemove', rotateVolume);
+      document.addEventListener('mouseup', stopRotating);
+    });
+
+    function rotateVolume(e) {
+      if (!isDragging) return;
+      const rect = volumeControl.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+      currentRotation = angle * (180 / Math.PI) + 90;
+      if (currentRotation < 0) currentRotation += 360;
+      if (currentRotation > 270) currentRotation = 270;
+      volumeIndicator.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg)`;
+    }
+
+    function stopRotating() {
+      isDragging = false;
+      document.removeEventListener('mousemove', rotateVolume);
+      document.removeEventListener('mouseup', stopRotating);
+    }
+
+    powerSwitch.addEventListener('click', () => {
+      isPoweredOn = !isPoweredOn;
+      powerLed.classList.toggle('on', isPoweredOn);
+      screenContent.style.display = isPoweredOn ? 'block' : 'none';
+    });
+
+    buttons.forEach(button => {
+      button.addEventListener('mousedown', () => {
+        button.style.transform = 'scale(0.95)';
+        button.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+      });
+      button.addEventListener('mouseup', () => {
+        button.style.transform = 'scale(1)';
+        button.style.boxShadow = 'none';
+      });
+      button.addEventListener('mouseleave', () => {
+        button.style.transform = 'scale(1)';
+        button.style.boxShadow = 'none';
+      });
+    });
+
+    linkCablePort.addEventListener('click', () => {
+      isLinkCableConnected = !isLinkCableConnected;
+      linkCable.style.display = isLinkCableConnected ? 'block' : 'none';
+    });
+
+    // Matrix background
+    const canvas = document.querySelector('.matrix-bg');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+    const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const nums = '0123456789';
+
+    const alphabet = katakana + latin + nums;
+
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+
+    const rainDrops = [];
+
+    for (let x = 0; x < columns; x++) {
+      rainDrops[x] = 1;
+    }
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#0F0';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < rainDrops.length; i++) {
+        const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+        if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          rainDrops[i] = 0;
+        }
+        rainDrops[i]++;
+      }
+    };
+
+    setInterval(draw, 30);
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
